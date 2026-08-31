@@ -47,11 +47,18 @@ import { useState } from "react";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    return !sessionStorage.getItem("securevault_splash_shown");
+  });
+
+  const handleSplashFinish = () => {
+    sessionStorage.setItem("securevault_splash_shown", "true");
+    setShowSplash(false);
+  };
 
   return (
     <QueryClientProvider client={queryClient}>
-      {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+      {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
       <AuthProvider>
         <FilesProvider>
           <NotesProvider>
