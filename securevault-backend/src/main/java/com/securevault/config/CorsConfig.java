@@ -17,10 +17,12 @@ public class CorsConfig {
 
         cors.setAllowCredentials(true);
 
-        // FIXED ✔ No more "*"
+        // Allow Localhost, Vercel, and Production Origins
         cors.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:*",
-                "http://127.0.0.1:*"
+                "http://127.0.0.1:*",
+                "https://*.vercel.app",
+                "https://*"
         ));
 
 
