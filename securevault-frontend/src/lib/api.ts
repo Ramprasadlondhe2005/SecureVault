@@ -20,36 +20,44 @@
 // }
 
 
-export const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+export const API_BASE = rawBaseUrl.replace(/\/+$/, "");
 
 export async function apiFetch(path: string, options: any = {}) {
   const token = localStorage.getItem("securevault_token");
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
 
   const isFormData = options.body instanceof FormData;
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      ...(isFormData ? {} : { "Content-Type": "application/json" }),
-      Authorization: token ? `Bearer ${token}` : "",
-      ...(options.headers || {})
+  try {
+    const res = await fetch(`${API_BASE}${cleanPath}`, {
+      ...options,
+      headers: {
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+        Authorization: token ? `Bearer ${token}` : "",
+        ...(options.headers || {})
+      }
+    });
+
+    if (!res.ok) {
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {}
+
+      return {
+        success: false,
+        status: res.status,
+        message: data?.message || `HTTP Error ${res.status}`
+      };
     }
-  });
 
-  // ---- FIX: Handle login errors safely ---- //
-  if (!res.ok) {
-    let data = null;
-    try {
-      data = await res.json(); // backend message read karna important!
-    } catch {}
-
+    return await res.json();
+  } catch (err: any) {
+    console.error("API Fetch Error:", err);
     return {
       success: false,
-      status: res.status,
-      message: data?.message || "Request failed"
+      message: err.message || "Failed to connect to backend server"
     };
   }
-
-  // ---- SUCCESS ---- //
-  return await res.json();
 }

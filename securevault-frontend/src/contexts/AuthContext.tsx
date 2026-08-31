@@ -172,8 +172,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return { success: true };
 
-  } catch (e) {
-    return { success: false, error: "Server error" };
+  } catch (e: any) {
+    return { success: false, error: e?.message || "Server error" };
   }
 };
 
@@ -187,9 +187,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return data.success
         ? { success: true }
-        : { success: false, error: data.message };
-    } catch {
-      return { success: false, error: "Server error" };
+        : { success: false, error: data?.message || "Signup failed" };
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Server error" };
     }
   };
 
