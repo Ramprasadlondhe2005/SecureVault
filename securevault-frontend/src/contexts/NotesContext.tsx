@@ -56,8 +56,8 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
-  const normalizeNotes = list =>
-    list.map(n => ({ ...n, createdBy: n.createdBy || n.ownerId, tags: Array.isArray(n.tags) ? n.tags : JSON.parse(n.tags || "[]") }));
+  const normalizeNotes = (list: any) =>
+    (Array.isArray(list) ? list : []).map(n => ({ ...n, createdBy: n.createdBy || n.ownerId, tags: Array.isArray(n.tags) ? n.tags : JSON.parse(n.tags || "[]") }));
 
   const reloadNotes = async () => {
     setIsLoading(true);
