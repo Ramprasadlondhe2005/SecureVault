@@ -20,7 +20,7 @@
 // }
 
 
-const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "https://securevault-backend-1k72.onrender.com/api";
 export const API_BASE = rawBaseUrl.replace(/\/+$/, "");
 
 export async function apiFetch(path: string, options: any = {}) {
