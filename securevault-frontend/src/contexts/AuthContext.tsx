@@ -133,13 +133,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  /* ---------------- ALERT READ ---------------- */
+  /* ---------------- ALERT READ & ADD ---------------- */
   const markAlertRead = (id: string) => {
     const updated = securityAlerts.map((a) =>
       a.id === id ? { ...a, isRead: true } : a
     );
     setSecurityAlerts(updated);
     localStorage.setItem("securevault_alerts", JSON.stringify(updated));
+  };
+
+  const addSecurityAlert = (message: string, severity: "low" | "medium" | "high" | "critical" = "medium") => {
+    const newAlert: SecurityAlert = {
+      id: String(Date.now()),
+      message,
+      severity,
+      timestamp: new Date().toISOString(),
+      isRead: false,
+    };
+    setSecurityAlerts((prev) => {
+      const updated = [newAlert, ...prev];
+      localStorage.setItem("securevault_alerts", JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const login = async (email: string, password: string) => {
@@ -151,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // IF LOGIN FAILED (401 FROM BACKEND)
     if (data.success === false) {
+      addSecurityAlert(`Failed login attempt for ${email}`, "high");
       return { success: false, error: data.message };
     }
 
@@ -166,6 +182,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     localStorage.setItem("securevault_token", data.token);
     localStorage.setItem("securevault_user", JSON.stringify(loggedUser));
+
+    addSecurityAlert(`New active login session established for ${data.name || email}`, "medium");
 
     await reloadSessions();
     await reloadActivity();
@@ -184,6 +202,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: "POST",
         body: JSON.stringify({ email, password, name }),
       });
+
+      if (data.success) {
+        addSecurityAlert(`New account registered for ${email}`, "low");
+      }
 
       return data.success
         ? { success: true }
@@ -225,6 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("securevault_user", JSON.stringify(updated));
 
       addActivityLog("2fa_enable", "Enabled two-factor authentication");
+      addSecurityAlert("Two-Factor Authentication (2FA) was successfully enabled", "high");
       return secret;
     } catch {
       return null;
@@ -241,6 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("securevault_user", JSON.stringify(updated));
 
       addActivityLog("2fa_disable", "Disabled two-factor authentication");
+      addSecurityAlert("CRITICAL WARNING: Two-Factor Authentication (2FA) was disabled", "critical");
     } catch {}
   };
 
