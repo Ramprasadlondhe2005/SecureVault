@@ -118,6 +118,10 @@ export function FilesProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify(body),
     });
 
+    if (!saved || saved.success === false || saved.status >= 400) {
+      throw new Error(saved?.message || "Upload failed. Please Sign In again.");
+    }
+
     const rawFile = saved?.data || saved;
     const newFile = { ...rawFile, uploadedBy: rawFile.uploadedBy || rawFile.ownerId };
 
