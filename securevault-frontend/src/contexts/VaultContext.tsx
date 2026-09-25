@@ -45,7 +45,8 @@ export function VaultProvider({ children }) {
   // -------------------------------------------------
   const loadPasswords = async () => {
     const res = await apiFetch("/passwords");
-    setPasswords(res || []);
+    const list = res?.data || res;
+    setPasswords(Array.isArray(list) ? list : []);
   };
 
   // -------------------------------------------------
