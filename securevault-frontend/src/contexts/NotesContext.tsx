@@ -113,7 +113,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     return optimistic;
   };
 
-  const getNote = id => notes.find(n => String(n.id) === String(id));
+  const getNote = (id: string | number) => notes.find(n => String(n.id) === String(id));
 
   const getUserNotes = () => notes.filter(n => String(n.createdBy) === String(user?.id));
 
@@ -122,7 +122,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     if (!encryptionKey) throw new Error("Encryption key missing");
 
     const updatedList = await Promise.all(
-      notes.map(async n => {
+      notes.map(async (n: EncryptedNote) => {
         if (String(n.id) !== String(id)) return n;
 
         let encryptedContent = n.encryptedContent;
@@ -147,7 +147,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
 
     setNotes(updatedList);
 
-    const saved = updatedList.find(n => String(n.id) === String(id));
+    const saved = updatedList.find((n: any) => String(n.id) === String(id));
 
     await apiFetch(`/notes/${id}`, {
       method: "PUT",

@@ -52,7 +52,7 @@ export function VaultProvider({ children }) {
   // -------------------------------------------------
   // CREATE PASSWORD
   // -------------------------------------------------
-  const createPassword = async ({ title, username, password, url, category }) => {
+  const createPassword = async ({ title, username, password, url, category }: any) => {
     if (!key) throw new Error("Key not ready");
 
     const { encrypted, iv } = await encryptData(password, key);
@@ -78,7 +78,7 @@ export function VaultProvider({ children }) {
   // -------------------------------------------------
   // UPDATE PASSWORD (NEW)
   // -------------------------------------------------
-  const updatePassword = async (id, updated) => {
+  const updatePassword = async (id: any, updated: any) => {
     if (!key) throw new Error("Key not ready");
 
     // Encrypt updated password
@@ -109,7 +109,7 @@ export function VaultProvider({ children }) {
   // -------------------------------------------------
   // DECRYPT
   // -------------------------------------------------
-  const decryptPassword = async (entry) => {
+  const decryptPassword = async (entry: any) => {
     if (!key) throw new Error("Key not ready");
     return decryptData(entry.encryptedPassword, entry.iv, key);
   };
@@ -117,7 +117,7 @@ export function VaultProvider({ children }) {
   // -------------------------------------------------
   // DELETE PASSWORD
   // -------------------------------------------------
-  const deletePassword = async (id) => {
+  const deletePassword = async (id: any) => {
     await apiFetch(`/passwords/${id}`, { method: "DELETE" });
     setPasswords((prev) => prev.filter((p) => p.id !== id));
   };
