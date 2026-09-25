@@ -62,11 +62,16 @@ export function FilesProvider({ children }: { children: ReactNode }) {
   const [files, setFiles] = useState<EncryptedFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { addActivityLog } = useAuth();
+  const { token, addActivityLog } = useAuth();
 
   useEffect(() => {
-    loadFiles();
-  }, []);
+    if (token) {
+      loadFiles();
+    } else {
+      setFiles([]);
+      setIsLoading(false);
+    }
+  }, [token]);
 
   /* ----------------------------------------------------------
      LOAD ALL USER FILES

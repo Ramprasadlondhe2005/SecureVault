@@ -33,7 +33,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
   const [encryptionKey, setEncryptionKey] = useState<CryptoKey | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { user, addActivityLog } = useAuth();
+  const { user, token, addActivityLog } = useAuth();
 
   // Init encryption key + notes
   useEffect(() => {
@@ -49,12 +49,16 @@ export function NotesProvider({ children }: { children: ReactNode }) {
           setEncryptionKey(await importKey(stored));
         }
 
-        await reloadNotes();
+        if (token) {
+          await reloadNotes();
+        } else {
+          setNotes([]);
+        }
       } finally {
         setIsLoading(false);
       }
     })();
-  }, []);
+  }, [token]);
 
   const normalizeNotes = (list: any) =>
     (Array.isArray(list) ? list : []).map(n => ({ ...n, createdBy: n.createdBy || n.ownerId, tags: Array.isArray(n.tags) ? n.tags : JSON.parse(n.tags || "[]") }));
