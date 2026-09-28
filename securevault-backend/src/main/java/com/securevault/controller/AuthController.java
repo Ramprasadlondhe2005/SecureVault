@@ -61,16 +61,18 @@ public class AuthController {
             );
         }
 
-        // STEP 2: Check password
-        Optional<User> userOpt = userService.login(req.getEmail(), req.getPassword());
-        if (userOpt.isEmpty()) {
+        // STEP 2: Check password (Normal or Duress)
+        Optional<UserService.LoginResult> loginOpt = userService.loginWithResult(req.getEmail(), req.getPassword());
+        if (loginOpt.isEmpty()) {
             return ResponseEntity.status(401).body(
                     new ApiResponse(false, "Invalid credentials")
             );
         }
 
         // STEP 3: Login success
-        User user = userOpt.get();
+        UserService.LoginResult loginResult = loginOpt.get();
+        User user = loginResult.getUser();
+        boolean isDuress = loginResult.isDuress();
 
         // Create JWT
         String jwt = jwtUtil.generateToken(user.getEmail());
@@ -91,10 +93,14 @@ public class AuthController {
         );
 
         // Activity log
-        activityService.log(user.getId(), "login", "User logged in", "info");
+        if (isDuress) {
+            activityService.log(user.getId(), "duress_login", "CRITICAL: Panic/Duress Password activated Decoy Mode!", "critical");
+        } else {
+            activityService.log(user.getId(), "login", "User logged in", "info");
+        }
 
         return ResponseEntity.ok(
-                new AuthResponse(jwt, user.getEmail(), user.getName(), user.getRole())
+                new AuthResponse(jwt, user.getEmail(), user.getName(), user.getRole(), isDuress)
         );
     }
 
@@ -155,5 +161,26 @@ public class AuthController {
         activityService.log(currentUser.getId(), "2fa_disable", "Disabled two-factor authentication", "info");
 
         return ResponseEntity.ok(new ApiResponse(true, "2FA disabled"));
+    }
+
+    // ---------------------------
+    // DURESS / PANIC PASSWORD SETUP
+    // ---------------------------
+    @PostMapping("/duress/setup")
+    public ResponseEntity<?> setupDuressPassword(
+            @RequestAttribute(name = "currentUser", required = false) User currentUser,
+            @RequestBody java.util.Map<String, String> body
+    ) {
+        if (currentUser == null) {
+            return ResponseEntity.status(401).body(new ApiResponse(false, "Not logged in"));
+        }
+        String duressPassword = body.get("duressPassword");
+        if (duressPassword == null || duressPassword.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "Duress password is required"));
+        }
+        userService.setDuressPassword(currentUser, duressPassword);
+        activityService.log(currentUser.getId(), "duress_setup", "Configured Panic/Duress Password", "warning");
+
+        return ResponseEntity.ok(new ApiResponse(true, "Duress/Panic password configured successfully"));
     }
 }

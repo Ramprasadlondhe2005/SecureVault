@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const VaultContext = createContext(null);
 
 export function VaultProvider({ children }: { children: React.ReactNode }) {
-  const { user, token } = useAuth();
+  const { user, token, isDuressMode } = useAuth();
 
   const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
   const [key, setKey] = useState<CryptoKey | null>(null);
@@ -35,14 +35,14 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         setKey(newKey);
       }
 
-      if (token) {
+      if (token && !isDuressMode) {
         await loadPasswords();
       } else {
         setPasswords([]);
       }
       setLoading(false);
     })();
-  }, [token]);
+  }, [token, isDuressMode]);
 
   // -------------------------------------------------
   // LOAD PASSWORDS FROM BACKEND

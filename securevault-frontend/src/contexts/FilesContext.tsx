@@ -62,16 +62,16 @@ export function FilesProvider({ children }: { children: ReactNode }) {
   const [files, setFiles] = useState<EncryptedFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { token, addActivityLog } = useAuth();
+  const { token, isDuressMode, addActivityLog } = useAuth();
 
   useEffect(() => {
-    if (token) {
+    if (token && !isDuressMode) {
       loadFiles();
     } else {
       setFiles([]);
       setIsLoading(false);
     }
-  }, [token]);
+  }, [token, isDuressMode]);
 
   /* ----------------------------------------------------------
      LOAD ALL USER FILES

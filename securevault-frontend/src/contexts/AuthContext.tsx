@@ -34,6 +34,7 @@ interface AuthContextType {
   user: any | null;
   token: string | null;
   isLoading: boolean;
+  isDuressMode: boolean;
 
   sessions: Session[];
   activityLogs: ActivityLog[];
@@ -51,6 +52,7 @@ interface AuthContextType {
 
   enable2FA: () => Promise<string | null>;
   disable2FA: () => Promise<void>;
+  setupDuressPassword: (password: string) => Promise<{ success: boolean; message?: string }>;
 
   getAllUsers: () => any[];
 }
@@ -72,6 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
   const [token, setToken] = useState<string | null>(
     localStorage.getItem("securevault_token")
+  );
+  const [isDuressMode, setIsDuressMode] = useState<boolean>(
+    localStorage.getItem("securevault_is_duress") === "true"
   );
   const [isLoading, setIsLoading] = useState(true);
 
@@ -100,8 +105,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /* ---------------- USERS (Teams Module) ---------------- */
   const loadUsers = async () => {
     try {
-      // 🔥 FIX: Your backend has NO /api/users endpoint.
-      // So we avoid 404 errors and set empty list safely.
       setAllUsers([]);
       return [];
     } catch {
@@ -177,23 +180,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: data.role
     };
 
+    const isDuress = Boolean(data.isDuress || data.duress);
+
     setToken(data.token);
     setUser(loggedUser);
+    setIsDuressMode(isDuress);
 
     localStorage.setItem("securevault_token", data.token);
     localStorage.setItem("securevault_user", JSON.stringify(loggedUser));
+    localStorage.setItem("securevault_is_duress", String(isDuress));
 
-    addSecurityAlert(`New active login session established for ${data.name || email}`, "medium");
+    if (isDuress) {
+      addSecurityAlert(`CRITICAL ALERT: Panic/Duress Password activated Decoy Mode!`, "critical");
+    } else {
+      addSecurityAlert(`New active login session established for ${data.name || email}`, "medium");
+    }
 
     await reloadSessions();
     await reloadActivity();
 
-    return { success: true };
+    return { success: true, isDuress };
 
   } catch (e: any) {
     return { success: false, error: e?.message || "Server error" };
   }
 };
+
+  /* ---------------- DURESS PASSWORD SETUP ---------------- */
+  const setupDuressPassword = async (duressPassword: string) => {
+    try {
+      const res = await apiFetch("/auth/duress/setup", {
+        method: "POST",
+        body: JSON.stringify({ duressPassword }),
+      });
+
+      if (res?.success) {
+        addActivityLog("duress_setup", "Configured Panic/Duress Password");
+        addSecurityAlert("Duress/Panic Password was successfully configured", "high");
+        return { success: true, message: res.message || "Panic/Duress Password configured successfully" };
+      }
+
+      return { success: false, message: res?.message || "Failed to configure Duress password" };
+    } catch (e: any) {
+      return { success: false, message: e?.message || "Server error" };
+    }
+  };
 
   /* ---------------- SIGNUP ---------------- */
   const signup = async (email, password, name) => {
@@ -272,9 +303,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem("securevault_token");
     localStorage.removeItem("securevault_user");
+    localStorage.removeItem("securevault_is_duress");
 
     setUser(null);
     setToken(null);
+    setIsDuressMode(false);
     setSessions([]);
     setActivityLogs([]);
     setSecurityAlerts([]);
@@ -287,6 +320,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         token,
         isLoading,
+        isDuressMode,
 
         sessions,
         activityLogs,
@@ -302,6 +336,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         enable2FA,
         disable2FA,
+        setupDuressPassword,
 
         addActivityLog,
 

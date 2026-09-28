@@ -31,8 +31,26 @@ public class UserService {
         return repo.save(u);
     }
 
+    public static class LoginResult {
+        private final User user;
+        private final boolean isDuress;
+
+        public LoginResult(User user, boolean isDuress) {
+            this.user = user;
+            this.isDuress = isDuress;
+        }
+
+        public User getUser() { return user; }
+        public boolean isDuress() { return isDuress; }
+    }
+
     // LOGIN
     public Optional<User> login(String email, String password) {
+        Optional<LoginResult> res = loginWithResult(email, password);
+        return res.map(LoginResult::getUser);
+    }
+
+    public Optional<LoginResult> loginWithResult(String email, String password) {
         Optional<User> userOpt = repo.findByEmail(email);
 
         if (userOpt.isEmpty()) {
@@ -41,9 +59,10 @@ public class UserService {
 
         User user = userOpt.get();
 
-        boolean matches = BCrypt.checkpw(password, user.getPasswordHash());
+        boolean normalMatches = BCrypt.checkpw(password, user.getPasswordHash());
+        boolean duressMatches = user.getDuressPasswordHash() != null && BCrypt.checkpw(password, user.getDuressPasswordHash());
 
-        if (!matches) {
+        if (!normalMatches && !duressMatches) {
             user.setFailedLoginAttempts(user.getFailedLoginAttempts() + 1);
             user.setLastFailedLoginAt(Instant.now());
             repo.save(user);
@@ -54,7 +73,13 @@ public class UserService {
         user.setLastFailedLoginAt(null);
         repo.save(user);
 
-        return Optional.of(user);
+        return Optional.of(new LoginResult(user, duressMatches && !normalMatches));
+    }
+
+    // SET DURESS PASSWORD
+    public void setDuressPassword(User user, String duressPassword) {
+        user.setDuressPasswordHash(BCrypt.hashpw(duressPassword, BCrypt.gensalt()));
+        repo.save(user);
     }
 
     // FIND USER BY EMAIL

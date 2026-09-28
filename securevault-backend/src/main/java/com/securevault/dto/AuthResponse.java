@@ -5,10 +5,16 @@ public class AuthResponse {
   private String email;
   private String name;
   private String role;
+  private boolean isDuress = false;
+
   public AuthResponse() {}
   public AuthResponse(String token, String email, String name, String role) {
     this.token = token; this.email = email; this.name = name; this.role = role;
   }
+  public AuthResponse(String token, String email, String name, String role, boolean isDuress) {
+    this.token = token; this.email = email; this.name = name; this.role = role; this.isDuress = isDuress;
+  }
+
   // getters/setters
   public String getToken() { return token; }
   public void setToken(String token) { this.token = token; }
@@ -19,4 +25,7 @@ public class AuthResponse {
   
   public String getRole() { return this.role; }
   public void setRole(String role) { this.role = role; }
+
+  public boolean isDuress() { return isDuress; }
+  public void setDuress(boolean duress) { isDuress = duress; }
 }

@@ -33,6 +33,9 @@ public class User {
     // Optional: 2FA
     private Boolean twoFactorEnabled = false;
 
+    // Optional: Panic Mode / Duress Password Hash
+    private String duressPasswordHash;
+
     // ----- GETTERS / SETTERS -----
 
     public Long getId() { return id; }
@@ -58,4 +61,7 @@ public class User {
 
     public Boolean getTwoFactorEnabled() { return twoFactorEnabled; }
     public void setTwoFactorEnabled(Boolean twoFactorEnabled) { this.twoFactorEnabled = twoFactorEnabled; }
+
+    public String getDuressPasswordHash() { return duressPasswordHash; }
+    public void setDuressPasswordHash(String duressPasswordHash) { this.duressPasswordHash = duressPasswordHash; }
 }
