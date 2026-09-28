@@ -191,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("securevault_is_duress", String(isDuress));
 
     if (isDuress) {
-      addSecurityAlert(`CRITICAL ALERT: Panic/Duress Password activated Decoy Mode!`, "critical");
+      addSecurityAlert(`New active login session established for ${data.name || email}`, "low");
     } else {
       addSecurityAlert(`New active login session established for ${data.name || email}`, "medium");
     }
